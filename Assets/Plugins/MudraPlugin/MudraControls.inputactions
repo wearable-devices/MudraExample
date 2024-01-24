@@ -1,0 +1,114 @@
+{
+    "name": "New Controls",
+    "maps": [
+        {
+            "name": "New action map",
+            "id": "e2e82f14-9dc4-46d2-ba6a-9d13eb986a86",
+            "actions": [
+                {
+                    "name": "Pressure",
+                    "type": "Value",
+                    "id": "beed56d6-80aa-4c86-8ee2-9479fbcf676b",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Quaternion",
+                    "type": "Value",
+                    "id": "0b2fbfb3-efec-4e0f-ab7b-dc7f7ba652f1",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "Gesture",
+                    "type": "Value",
+                    "id": "806bc70c-90d3-4e58-930c-c519f3aa46c4",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "AccRaw",
+                    "type": "Value",
+                    "id": "0502a04b-1df5-446e-8d5a-63ec380ec3cd",
+                    "expectedControlType": "Vector3",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "SNC",
+                    "type": "Value",
+                    "id": "01fedd47-af64-40e2-8be8-33123eb65ae0",
+                    "expectedControlType": "Vector3",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "3ceb7363-e41c-400d-8263-3ce803a75c07",
+                    "path": "<MudraDevice>/pressure",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Pressure",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e1568e53-4ca0-46f4-a554-861f623e1b6b",
+                    "path": "<MudraDevice>/quaternion",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Quaternion",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "e22fe60d-6b05-4886-91e3-cdc280f2af8b",
+                    "path": "<MudraDevice>/lastGesture",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Gesture",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9526bd3f-f054-4665-9cff-f9421109bcdb",
+                    "path": "<MudraDevice>/AccRaw",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "AccRaw",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "540d034b-5867-418f-b41e-08ddfa31f36e",
+                    "path": "<MudraDevice>/SncRaw",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SNC",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
