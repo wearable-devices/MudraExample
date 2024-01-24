@@ -1,5 +1,5 @@
 {
-    "name": "New Controls",
+    "name": "MudraControls",
     "maps": [
         {
             "name": "New action map",
@@ -46,6 +46,24 @@
                     "type": "Value",
                     "id": "01fedd47-af64-40e2-8be8-33123eb65ae0",
                     "expectedControlType": "Vector3",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                },
+                {
+                    "name": "MouseClick",
+                    "type": "Button",
+                    "id": "0e5f1292-2603-4481-9b7d-05ddd84a67a2",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Press(behavior=2)",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "MousePosition",
+                    "type": "Value",
+                    "id": "f322f773-3ddb-4421-851b-c62a1c66c664",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
@@ -104,6 +122,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "SNC",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "280ff415-3324-47d6-8e0b-4525d34ee14b",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MouseClick",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "fbbc26c5-ea67-4ed3-a97c-3cd84203eae3",
+                    "path": "<Mouse>/position",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MousePosition",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Events;
 using TMPro;
 using Mudra.Unity;
 public class InputManager : MonoBehaviour
@@ -12,6 +13,11 @@ public class InputManager : MonoBehaviour
     public int lastGesture;
     public Vector3 AccRaw;
     public Vector3 SncRaw;
+    public float MouseState;
+    public Vector3 MousePos;
+
+    public UnityEvent OnClick;
+    public UnityEvent OnRelease;
 
     public void OnPressure(InputValue value)
     {
@@ -37,6 +43,25 @@ public class InputManager : MonoBehaviour
     {
         lastGesture = value.Get<int>();
 
+    }
+
+    public void OnMouseClick(InputValue value)
+    {
+        float clickValue = value.Get<float>();
+        if (clickValue != MouseState)
+        {
+            if (clickValue == 1)
+                OnClick.Invoke();
+            else
+                OnRelease.Invoke();
+        }
+
+        MouseState = value.Get<float>();
+    }
+
+    public void OnMousePosition(InputValue value)
+    {
+        MousePos = value.Get<Vector2>();
     }
     private void Start()
     {

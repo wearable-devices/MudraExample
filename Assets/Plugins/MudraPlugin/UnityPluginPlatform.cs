@@ -11,7 +11,7 @@ namespace Mudra.Unity
         const int NUM_OF_SNCS = 3;
 
         public static List<MudraDevice> devices = new List<MudraDevice>();
-        public static Vector2 mousePos =new Vector2(Screen.width/2,Screen.height/2);
+        public static Vector2 mousePos = new Vector2(Screen.width / 2, Screen.height / 2);
         abstract public void Init(string calibrationFile = "");
         abstract public void Update();
         abstract public void Close();
@@ -30,13 +30,18 @@ namespace Mudra.Unity
         public delegate void onInitFunc();
         public event onInitFunc onInit;
 
-#region OnGestureReady
+        public static bool HasDevices
+        {
+            get => devices.Count > 0;
+            private set => HasDevices = value;
+        }
+        #region OnGestureReady
 
         abstract public void UpdateOnGestureReadyCallback(int index);
-#endregion
+        #endregion
 
-#region OnFingerTipPressureReady
-       
+        #region OnFingerTipPressureReady
+
         abstract public void UpdateOnFingerTipPressureCallback(int index);
         abstract public void UpdateOnImuRawCallback(int index);
 
@@ -64,7 +69,7 @@ namespace Mudra.Unity
         abstract protected void UpdateAirMousePositionChangedCallback();
         #endregion
         public abstract string getFirmwareVersion(int id);
-        public abstract void SetupDevice(MudraDevice device);  
+        public abstract void SetupDevice(MudraDevice device);
         abstract public void UpdateOnQuaternionReadyCallback(int index);
         abstract public void UpdateOnSNCReady(int index);
 
