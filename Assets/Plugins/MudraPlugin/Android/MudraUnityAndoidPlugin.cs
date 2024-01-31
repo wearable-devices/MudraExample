@@ -14,13 +14,9 @@ namespace Mudra.Unity
 
         #region Android variables
         static AndroidJavaClass _mudraClass;
-        static AndroidJavaClass _mudraUserDataClass;
-        static AndroidJavaClass _mudraObserverFactory;
-
         static AndroidJavaObject _mudraDevices;
         static AndroidJavaObject _mudraInstance;
-        static AndroidJavaObject _mudraUserDataInstance;
-        static AndroidJavaObject _mudraSignInObserver;
+      
         static AndroidJavaObject devicesArrayJO;
         static List<AndroidJavaObject> devicesJO = new List<AndroidJavaObject>();
 
@@ -42,9 +38,6 @@ namespace Mudra.Unity
         {
             //find the main mudra class
             _mudraClass = new AndroidJavaClass("mudraAndroidSDK.model.Mudra");
-            _mudraUserDataClass = new AndroidJavaClass("mudraAndroidSDK.model.UserData");
-            _mudraObserverFactory = new AndroidJavaClass("mudraAndroidSDK.model.UserDataObserverFactory");
-
             Debug.Log("Get Mudra Class");
 
             //Get application context
@@ -54,7 +47,6 @@ namespace Mudra.Unity
 
             //Get mudra singleon instance
             _mudraInstance = _mudraClass.CallStatic<AndroidJavaObject>("getInstance");
-            _mudraUserDataInstance = _mudraUserDataClass.CallStatic<AndroidJavaObject>("getInstance");
             Debug.Log("Get Mudra Instance");
 
             String LICENSE = "LicenseType::Main";
@@ -128,16 +120,20 @@ namespace Mudra.Unity
         }
         public void OnConnected(int id)
         {
-            AndroidJavaObject model = new AndroidJavaClass("mudraAndroidSDK.enums.ModelType").GetStatic<AndroidJavaObject>("AirMouse");
-            devicesJO[id].Call("setModel", model);
+          
 
             UpdateOnGestureReadyCallback(id);
             UpdateOnFingerTipPressureCallback(id);
-            UpdateOnQuaternionReadyCallback(id);
-            UpdateOnSNCReady(id);
-            UpdateOnImuRawCallback(id);
+            //UpdateOnQuaternionReadyCallback(id);
+            // UpdateOnSNCReady(id);
+            // UpdateOnImuRawCallback(id);
+           // SwitchToAirmouse(true);
+           // sbyte[] test = new sbyte[] { 0x07, 0x07, 0x01 };
+            SendFirmwareCommand(MudraConstants.AIRMOUSE_ON);
+            SetAirMouseSpeed(5);
+            
 
-            InvokeInitFinished();
+           // InvokeInitFinished();
 
         }
 
@@ -153,6 +149,7 @@ namespace Mudra.Unity
             void run(AndroidJavaObject retObj)
             {
                 devices[deviceId].OnGesture((GestureType)retObj.Call<int>("ordinal"));
+
             }
         }
 

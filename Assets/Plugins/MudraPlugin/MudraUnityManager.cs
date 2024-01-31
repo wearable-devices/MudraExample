@@ -78,6 +78,7 @@ public class MudraUnityManager : MonoBehaviour
     private void Start()
     {
         Init();
+        Cursor.visible = true;
     }
 
     private void Update()
@@ -102,11 +103,7 @@ public class MudraUnityManager : MonoBehaviour
                 PluginPlatform.devices.Add(newDevice);
             }
 
-            SetAirmouseState(AirMouseState);
-            SetScale((int)Scale);
-            SetPressureSensitivity((int)Sensitivity);
-            SetAirMouseSpeed(AirMouseSpeed);
-            SetHand((int)Hand);
+           
 
         }
 #endif
@@ -130,7 +127,17 @@ Debug.Log("Create New Unity Plugin");
         }
 
         if (plugin != null)
+        {
             plugin.Init();
+            plugin.onInit += () =>
+            {
+                SetAirmouseState(AirMouseState);
+                SetScale((int)Scale);
+                SetPressureSensitivity((int)Sensitivity);
+                SetAirMouseSpeed(AirMouseSpeed);
+                SetHand((int)Hand);
+            };
+        }
     }
     public void GetDevices()
     {

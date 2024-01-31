@@ -19,17 +19,17 @@ namespace Mudra.Unity
         [InputControl(layout = "Axis")]
         public float pressure;
 
-        [InputControl(layout = "Quaternion")]
-        public Quaternion quaternion;
+        //[InputControl(layout = "Quaternion")]
+        //public Quaternion quaternion;
 
         [InputControl(layout = "Integer")]
         public int lastGesture;
 
-        [InputControl(layout = "Vector3")]
-        public Vector3 AccRaw;
+        //[InputControl(layout = "Vector3")]
+        //public Vector3 AccRaw;
 
-        [InputControl(layout = "Vector3")]
-        public Vector3 SncRaw;
+        //[InputControl(layout = "Vector3")]
+        //public Vector3 SncRaw;
     }
 
 
@@ -45,10 +45,10 @@ namespace Mudra.Unity
         public DeviceData deviceData;
 
         public AxisControl pressure { get; private set; }
-        public QuaternionControl quaternion { get; private set; }
+       // public QuaternionControl quaternion { get; private set; }
         public IntegerControl lastGesture { get; private set; }
-        public Vector3Control accRaw { get; private set; }
-        public Vector3Control sncRaw { get; private set; }
+       // public Vector3Control accRaw { get; private set; }
+       // public Vector3Control sncRaw { get; private set; }
 
         public MudraDevice(DeviceIdentifier identifier)
         {
@@ -145,10 +145,10 @@ namespace Mudra.Unity
             base.FinishSetup();
 
             pressure = GetChildControl<AxisControl>("pressure");
-            quaternion = GetChildControl<QuaternionControl>("quaternion");
+           // quaternion = GetChildControl<QuaternionControl>("quaternion");
             lastGesture = GetChildControl<IntegerControl>("lastGesture");
-            accRaw = GetChildControl<Vector3Control>("accRaw");
-            sncRaw = GetChildControl<Vector3Control>("sncRaw");
+           // accRaw = GetChildControl<Vector3Control>("accRaw");
+           // sncRaw = GetChildControl<Vector3Control>("sncRaw");
 
             Debug.Log("----------------------------------Finished Setup---------------------------------------");
         }
@@ -156,7 +156,6 @@ namespace Mudra.Unity
         public void OnGesture(GestureType gesture)
         {
             deviceData.lastGesture = gesture;
-
         }
 
         public void OnPressure(float pressure)
@@ -203,18 +202,22 @@ namespace Mudra.Unity
             if (deviceData.fingerTipPressure != null)
                 state.pressure = (float)deviceData.fingerTipPressure;
 
-            if (deviceData.quaternion != null)
-                state.quaternion = (Quaternion)deviceData.quaternion;
+           // if (deviceData.quaternion != null)
+                //state.quaternion = (Quaternion)deviceData.quaternion;
 
-            if (deviceData.lastGesture != null)
-                state.lastGesture = (int)deviceData.lastGesture;
+               
+                    state.lastGesture = (int)deviceData.lastGesture;
+                    Debug.Log("AAAAAAAAAA:" + state.lastGesture);
+
+
+
 
             if (deviceData.accRaw != null)
-                state.AccRaw = (Vector3)deviceData.accRaw;
+               // state.AccRaw = (Vector3)deviceData.accRaw;
 
             if (deviceData.sncRaw != null)
             {
-                state.SncRaw = (Vector3)deviceData.sncRaw;
+               // state.SncRaw = (Vector3)deviceData.sncRaw;
                 //Debug.Log((Vector3)deviceData.sncRaw);
             }
             InputSystem.QueueDeltaStateEvent(this, state);

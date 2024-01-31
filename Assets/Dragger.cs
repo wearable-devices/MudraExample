@@ -20,7 +20,7 @@ public class Dragger : MonoBehaviour
 
     public void Hold()
     {
-        if (Physics.Raycast(cam.ScreenPointToRay(inputManager.MousePos), out hit,100,mask))
+        if (Physics.Raycast(cam.ScreenPointToRay(inputManager.MousePos), out hit, 100, mask))
         {
             DraggingObject = hit.rigidbody;
             if (DraggingObject != null)
