@@ -202,15 +202,14 @@ namespace Mudra.Unity
             if (deviceData.fingerTipPressure != null)
                 state.pressure = (float)deviceData.fingerTipPressure;
 
-           // if (deviceData.quaternion != null)
-                //state.quaternion = (Quaternion)deviceData.quaternion;
+            // if (deviceData.quaternion != null)
+            //state.quaternion = (Quaternion)deviceData.quaternion;
 
-               
-                    state.lastGesture = (int)deviceData.lastGesture;
-                    Debug.Log("AAAAAAAAAA:" + state.lastGesture);
-
-
-
+            if (deviceData.lastGesture != null)
+            {
+                state.lastGesture = (int)deviceData.lastGesture;
+                Debug.Log("AAAAAAAAAA:" + state.lastGesture);
+            }
 
             if (deviceData.accRaw != null)
                // state.AccRaw = (Vector3)deviceData.accRaw;

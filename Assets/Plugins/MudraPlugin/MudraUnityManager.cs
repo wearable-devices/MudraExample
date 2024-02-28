@@ -91,6 +91,7 @@ public class MudraUnityManager : MonoBehaviour
 #if ENABLE_INPUT_SYSTEM
         if (PluginPlatform.deviceCreationQueue.Count > 0)
         {
+
             for (int i = 0; i < PluginPlatform.deviceCreationQueue.Count; i++)
             {
                 Debug.Log("Creating Device");
@@ -101,6 +102,7 @@ public class MudraUnityManager : MonoBehaviour
                 });
                 plugin.SetupDevice(newDevice);
                 PluginPlatform.devices.Add(newDevice);
+                PluginPlatform.deviceCreationQueue.RemoveAt(i);
             }
 
            

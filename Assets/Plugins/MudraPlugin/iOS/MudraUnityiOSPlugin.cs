@@ -74,32 +74,26 @@ namespace Mudra.Unity
                 //});
                 //devices.Add(newDevice);
                 deviceCreationQueue.Add(data[i]);
-                SetOnGestureExtern(ref data[i], OnGesture);
-                SetOnQuaternionExtern(ref data[i], OnQuaternion);
-                SetOnPressureExtern(ref data[i], OnPressure);
-                SetOnImuAccRawExtern(ref data[i], OnImuAccRaw);
-                SetOnSNCRawExtern(ref devicesData[i], OnSNCRaw);
-                SetMessageRecievedExtern(ref devicesData[i], OnMessageRecieved);
-
-
-
-                Byte[] enableSNC = {0x06,0x01};
-                SendFirmwareCommandExtern(ref devicesData[i], enableSNC, 2);
-
+              //  SetOnGestureExtern(ref data[i], OnGesture);
+               // SetOnQuaternionExtern(ref data[i], OnQuaternion);
+                //SetOnPressureExtern(ref data[i], OnPressure);
+                //SetOnImuAccRawExtern(ref data[i], OnImuAccRaw);
+                //SetOnSNCRawExtern(ref devicesData[i], OnSNCRaw);
+                //SetMessageRecievedExtern(ref devicesData[i], OnMessageRecieved);
 
 
             }
         }
         public override void SetupDevice(MudraDevice device)
         {
+            Debug.Log("------Setting Up Device-------");
             SetOnGestureExtern(ref device.identifier, OnGesture);
             SetOnQuaternionExtern(ref device.identifier, OnQuaternion);
             SetOnPressureExtern(ref device.identifier, OnPressure);
             SetOnImuAccRawExtern(ref device.identifier, OnImuAccRaw);
             SetOnSNCRawExtern(ref device.identifier, OnSNCRaw);
             SetMessageRecievedExtern(ref device.identifier, OnMessageRecieved);
-            Byte[] enableSNC = { 0x06, 0x01 };
-            SendFirmwareCommandExtern(ref device.identifier, enableSNC, 2);
+            SetOnMouseMovedExtern(OnMouseMoved);
 
         }
 
@@ -168,41 +162,7 @@ namespace Mudra.Unity
         public static extern void SendFirmwareCommandExtern(ref DeviceIdentifier data,byte[] command,int size);
        
 
-        public void GetDevices()
-        {
-
-            Debug.Log("Get Devices");
-            DeviceIdentifier[] devicesData = GetDevicesExtern();
-            Debug.Log("Found:" + devicesData.Length + " devices");
-            devices.Clear();
-            // test = devicesData.Length.ToString();
-
-            for (int i = 0; i < devicesData.Length; i++)
-            {
-                if (devicesData[i].id == -1) continue;
-
-                MudraDevice newDevice = (MudraDevice)InputSystem.AddDevice(new InputDeviceDescription
-                {
-                    interfaceName = "Mudra",
-                    product = "Sample Mudra"
-                });
-                newDevice.identifier = devicesData[i];
-
-                //MudraDevice device = new MudraDevice(devicesData[i]);
-                devices.Add(newDevice);
-                SetOnGestureExtern(ref devicesData[i], OnGesture);
-                SetOnQuaternionExtern(ref devicesData[i], OnQuaternion);
-                SetOnPressureExtern(ref devicesData[i], OnPressure);
-                SetOnImuAccRawExtern(ref devicesData[i], OnImuAccRaw);
-                SetOnSNCRawExtern(ref devicesData[i], OnSNCRaw);
-                SetMessageRecievedExtern(ref devicesData[i], OnMessageRecieved);
-                Byte[] enableSNC = { 0x06, 0x01 };
-                SendFirmwareCommandExtern(ref devicesData[i], enableSNC, 2);
-                //SetOnMouseMovedExtern(OnMouseMoved);
-
-            }
-        }
-
+       
 
         [MonoPInvokeCallback(typeof(OnGestureCallbackType))]
         public static void OnGesture(GestureType gesture, DeviceIdentifier device)
@@ -229,7 +189,7 @@ namespace Mudra.Unity
         [MonoPInvokeCallback(typeof(OnMouseMovedCallbackType))]
         public static void OnMouseMoved(float x,float y)
         {
-            //Debug.Log("Calllled");
+            Debug.Log("Called");
             mousePos.x += x;
             mousePos.y += y;
             mousePos.x = Mathf.Clamp(mousePos.x, 0, Screen.width);
@@ -449,6 +409,15 @@ namespace Mudra.Unity
         public override void UpdateOnImuRawCallback(int index)
         {
             throw new NotImplementedException();
+        }
+
+        public override void SendFirmwareCommand(byte[] command)
+        {
+            for (int i = 0; i < devices.Count; i++)
+            {
+                SendFirmwareCommandExtern(ref devices[i].identifier, command, command.Length);
+
+            }
         }
     }
 }
