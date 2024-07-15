@@ -8,64 +8,94 @@ using TMPro;
 using Mudra.Unity;
 public class InputManager : MonoBehaviour
 {
+    //public static float temp;
     public float pressure;
-   // public Quaternion quaternion;
     public int lastGesture;
-    //public Vector3 AccRaw;
-    //public Vector3 SncRaw;
-    public float MouseState;
-    public Vector3 MousePos;
+    public NavigationButtons click;
+    public Quaternion quaternion;
 
-    public UnityEvent OnClick;
-    public UnityEvent OnRelease;
+    public UnityEvent OnClickEvent;
+    public UnityEvent OnReleaseEvent;
+
+    public static Vector3 mousePos;
+    [SerializeField] float mousespeed;
+
 
     public void OnPressure(InputValue value)
     {
         pressure = value.Get<float>();
     }
 
-    //public void OnAccRaw(InputValue value)
-    //{
-    //    AccRaw = value.Get<Vector3>();
-    //}
+    public void OnMouseDelta(InputValue value)
+    {
+        mousePos.x += value.Get<Vector2>().x * mousespeed;
+        mousePos.y -= value.Get<Vector2>().y * mousespeed;
 
-    //public void OnSncRaw(InputValue value)
-    //{
-    //    SncRaw = value.Get<Vector3>();
-    //}
-    //public void OnQuaternion(InputValue value)
-    //{
-    //    quaternion = value.Get<Quaternion>();
-    //}
+        mousePos.x = Mathf.Clamp(mousePos.x, 0, Screen.width);
+        mousePos.y = Mathf.Clamp(mousePos.y, 0, Screen.width);
+
+    }
+    public void OnQuaternion(InputValue value)
+    {
+        quaternion = value.Get<Quaternion>();
+    }
 
     public void OnGesture(InputValue value)
     {
         lastGesture = value.Get<int>();
-        Debug.Log("Gesture");
+        //Debug.Log("Gesture");
 
     }
 
-    public void OnMouseClick(InputValue value)
+    public void OnClick(InputValue value)
     {
-        float clickValue = value.Get<float>();
-        if (clickValue != MouseState)
-        {
-            if (clickValue == 1)
-                OnClick.Invoke();
-            else
-                OnRelease.Invoke();
-        }
+        NavigationButtons clickValue = (NavigationButtons)value.Get<float>();
+        Debug.Log(clickValue);
 
-        MouseState = value.Get<float>();
+        if (clickValue == NavigationButtons.Press)
+            OnClickEvent.Invoke();
+        else
+            OnReleaseEvent.Invoke();
+
+
+        click = clickValue;
     }
-
-    public void OnMousePosition(InputValue value)
+    public void OnMousePC(InputValue value)
     {
-        MousePos = value.Get<Vector2>();
+        if (!PluginPlatform.devices[0].deviceData.sendToHID)
+            return;
+        Debug.Log(value.Get<float>());
+        NavigationButtons clickValue = (NavigationButtons)value.Get<float>();
+        Debug.Log(clickValue);
+
+        if (clickValue == NavigationButtons.Press)
+            OnClickEvent.Invoke();
+        else
+            OnReleaseEvent.Invoke();
+
+
+        click = clickValue;
     }
+    public void OnMousePCPos(InputValue value)
+    {
+        if (!PluginPlatform.devices[0].deviceData.sendToHID)
+            return;
+        mousePos = value.Get<Vector2>();
+    }
+
+    //public void OnMousePosition(InputValue value)
+    //{
+    //    MousePos = value.Get<Vector2>();
+    //}
     private void Start()
     {
         DontDestroyOnLoad(this.gameObject);
+        ResetMousePos();
+    }
+   
+    public void ResetMousePos()
+    {
+        mousePos = new Vector2(Screen.width / 2, Screen.height / 2);
     }
 }
 #endif

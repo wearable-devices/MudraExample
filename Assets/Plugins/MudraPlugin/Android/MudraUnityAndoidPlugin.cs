@@ -16,7 +16,7 @@ namespace Mudra.Unity
         static AndroidJavaClass _mudraClass;
         static AndroidJavaObject _mudraDevices;
         static AndroidJavaObject _mudraInstance;
-      
+
         static AndroidJavaObject devicesArrayJO;
         static List<AndroidJavaObject> devicesJO = new List<AndroidJavaObject>();
 
@@ -36,9 +36,11 @@ namespace Mudra.Unity
         }
         public override void Init(string calibrationFile = "")
         {
+            AndroidJNI.AttachCurrentThread();
             //find the main mudra class
-            _mudraClass = new AndroidJavaClass("mudraAndroidSDK.model.Mudra");
+
             Debug.Log("Get Mudra Class");
+            _mudraClass = new AndroidJavaClass("mudraAndroidSDK.model.Mudra");
 
             //Get application context
             AndroidJavaClass jcu = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
@@ -50,93 +52,118 @@ namespace Mudra.Unity
             Debug.Log("Get Mudra Instance");
 
             String LICENSE = "LicenseType::Main";
-            _mudraInstance.Call("setLicense", 0, LICENSE);
+            _mudraInstance.Call("setLicenseInternalUseOnly");
             _mudraInstance.Call("requestAccessPermissions", jo);
-            AndroidJavaObject topValue = new AndroidJavaClass("mudraAndroidSDK.enums.LoggingSeverity").GetStatic<AndroidJavaObject>("Warning");
+            AndroidJavaObject topValue = new AndroidJavaClass("mudraAndroidSDK.enums.LoggingSeverity").GetStatic<AndroidJavaObject>("Info");
 
             _mudraInstance.Call("setCoreLoggingSeverity", topValue);
             Debug.Log("Set Mudra License");
 
+            _mudraInstance.Call("setMudraDelegate", new MudraDelegate(this));
 
-            //Get all mudra devices, we get an AndroidJavaObject which is a Java ArrayList
+            // Get all mudra devices, we get an AndroidJavaObject which is a Java ArrayList
             devicesArrayJO = _mudraInstance.Call<AndroidJavaObject>("getBondedDevices", context);
             int size = devicesArrayJO.Call<int>("size");
             Debug.Log("Found:" + size + " devices");
 
 
-            //we can then connect each device and create a new MudraDevice for each one
+            // we can then connect each device and create a new MudraDevice for each one
             for (int i = 0; i < size; i++)
             {
                 AndroidJavaObject currDevice = devicesArrayJO.Call<AndroidJavaObject>("get", i);
-                devicesJO.Add(currDevice);
+                //devicesJO.Add(currDevice);
                 currDevice.Call("connectDevice", context);
-
                 //TODO: move to plugin platfrom under an add device function
-                DeviceIdentifier identifier;
-                identifier.id = i;
 
-                MudraDevice newDevice = (MudraDevice)InputSystem.AddDevice(new InputDeviceDescription
-                {
-                    interfaceName = "Mudra",
-                    product = "Sample Mudra"
-                });
-                newDevice.identifier = identifier;
-                devices.Add(newDevice);
-
-                OnConnected(i);
 
 
             }
 
         }
 
-        public override void SwitchToAirmouse(bool state)
+
+        #region UpdateCallbacks
+
+        override public void UpdateOnGestureReadyCallback(int index)
         {
-            for (int i = 0; i < devicesJO.Count; i++)
-            {
-                devicesJO[i].Call("setAirMouseActive", state);
-            }
-        }
-        public override void ChangeScale(int Scale)
-        {
-            for (int i = 0; i < devicesJO.Count; i++)
+
+            Debug.Log("Gesture Set To " + devices[index].IsGestureEnabled);
+            if (devices[index].IsGestureEnabled)
             {
 
 
-                switch (Scale)
-                {
-                    case 0:
-                        devicesJO[i].Call("sendGeneralCommand", MudraConstants.PRESSURE_SCALE_LOW, null);
-                        break;
-                    case 1:
-                        devicesJO[i].Call("sendGeneralCommand", MudraConstants.PRESSURE_SCALE_MID, null);
-                        break;
-                    case 2:
-                        devicesJO[i].Call("sendGeneralCommand", MudraConstants.PRESSURE_SCALE_HIGH, null);
-                        break;
+                devicesJO[index].Call("setOnGestureReady", new OnGestureReady(index));
 
-                }
+            }
+            else
+            {
+
+                devicesJO[index].Call("setOnGestureReady", null);
+            }
+
+        }
+        override public void UpdateOnQuaternionReadyCallback(int index)
+        {
+            Debug.Log("Quaternion Set To " + devices[index].IsImuQuaternionEnabled);
+
+            if (devices[index].IsImuQuaternionEnabled)
+            {
+                devicesJO[index].Call("setOnImuQuaternionReady", new OnImuQuaternionReady(index));
+            }
+            else
+            {
+                devicesJO[index].Call("setOnImuQuaternionReady", null);
+            }
+
+        }
+
+
+        override public void UpdateOnFingerTipPressureCallback(int index)
+        {
+            Debug.Log("Pressure Set To " + devices[index].IsFingerTipPressureEnabled);
+
+            if (devices[index].IsFingerTipPressureEnabled)
+            {
+
+                devicesJO[index].Call("setOnPressureReady", new OnFingertipPressureReady(index));
+
+            }
+            else
+            {
+
+                devicesJO[index].Call("setOnPressureReady", null);
+
+            }
+
+        }
+        public override void UpdateNavigationCallback(int index)
+        {
+            Debug.Log("Navigation Set To " + devices[index].isNavigationEnabled);
+
+            if (devices[index].isNavigationEnabled)
+            {
+
+                devicesJO[index].Call("setOnNavigationPointerReady", new OnNavigationPointerReady(index));
+                setNavigationActive(true);
+                devicesJO[index].Call("setOnButtonChanged", new OnButtonChanged(index));
+
+
+
+            }
+            else
+            {
+
+                devicesJO[index].Call("setOnNavigationPointerReady", null);
+                setNavigationActive(false);
+                devicesJO[index].Call("setOnButtonChanged", null);
+
+
             }
         }
-        public void OnConnected(int id)
-        {
-          
+        #endregion
 
-            UpdateOnGestureReadyCallback(id);
-            UpdateOnFingerTipPressureCallback(id);
-            //UpdateOnQuaternionReadyCallback(id);
-            // UpdateOnSNCReady(id);
-            // UpdateOnImuRawCallback(id);
-           // SwitchToAirmouse(true);
-           // sbyte[] test = new sbyte[] { 0x07, 0x07, 0x01 };
-            SendFirmwareCommand(MudraConstants.AIRMOUSE_ON);
-            SetAirMouseSpeed(5);
-            
 
-           // InvokeInitFinished();
-
-        }
-
+        #region Callback Interfaces
         class OnGestureReady : AndroidJavaProxy
         {
             int deviceId;
@@ -153,95 +180,28 @@ namespace Mudra.Unity
             }
         }
 
-        public override void SetPressureSensitivity(int sens)
+        class OnAirmouseButton : AndroidJavaProxy
         {
-            byte[] command = { };
-
-            for (int i = 0; i < devicesJO.Count; i++)
-            {
-
-                switch (sens)
-                {
-                    case 0:
-                        command = MudraConstants.PRESSURE_SENS_LOW;
-                        break;
-                    case 1:
-                        command = MudraConstants.PRESSURE_SENS_MIDLOW;
-                        break;
-                    case 2:
-                        command = MudraConstants.PRESSURE_SENS_MID;
-
-                        break;
-                    case 3:
-                        command = MudraConstants.PRESSURE_SENS_MIDHIGH;
-
-                        break;
-                    case 4:
-                        command = MudraConstants.PRESSURE_SENS_HIGH;
-
-                        break;
-                }
-                devicesJO[i].Call("sendGeneralCommand", command, null);
-
-            }
-        }
-        public override void SetMainHand(int hand)
-        {
-            AndroidJavaObject topValue;
-            if (hand == 0)
-            {
-                topValue = new AndroidJavaClass("mudraAndroidSDK.enums.HandType").GetStatic<AndroidJavaObject>("LEFT");
-            }
-            else
-            {
-                topValue = new AndroidJavaClass("mudraAndroidSDK.enums.HandType").GetStatic<AndroidJavaObject>("RIGHT");
-            }
-
-            for (int i = 0; i < devicesJO.Count; i++)
-            {
-                devicesJO[i].Call("setHand", topValue);
-            }
-
-        }
-
-        class OnDeviceStatusChanged : AndroidJavaProxy
-        {
-            MudraUnityAndroidPlugin plugin;
             int id;
-            public OnDeviceStatusChanged(int id, MudraUnityAndroidPlugin plugin) : base("mudraAndroidSDK.interfaces.callback.OnDeviceStatusChanged")
+
+            public OnAirmouseButton(int id) : base("mudraAndroidSDK.interfaces.callback.OnAirMouseButtonCallback")
             {
-                this.plugin = plugin;
                 this.id = id;
-
+                Debug.Log("SetUpCallback");
             }
 
-            void run(bool isConnected)
+            void run(int button)
             {
-                Debug.Log("ddevice id: " + id + " ConnectStatus: " + isConnected);
+                //  Debug.Log("Weee");
 
-                if (isConnected)
-                {
-                    plugin.OnConnected(id);
-                }
+                // if (button == 0)
+                // devices[id].onPress.Invoke();
+
+
+
+                //  Debug.Log(quaternion);
             }
         }
-
-        override public void UpdateOnGestureReadyCallback(int index)
-        {
-            if (devices[index].IsGestureEnabled)
-            {
-
-                devicesJO[index].Call("setOnGestureReady", new OnGestureReady(index));
-
-            }
-            else
-            {
-
-                devicesJO[index].Call("setOnGestureReady", null);
-            }
-
-        }
-
         class OnFingertipPressureReady : AndroidJavaProxy
         {
             MudraUnityAndroidPlugin _unityPlugin;
@@ -255,51 +215,41 @@ namespace Mudra.Unity
 
             void run(float pressure)
             {
-                //Debug.Log("Test");
+                Debug.Log(pressure);
 
-                devices[id].OnPressure(pressure);
+                devices[id].OnPressure(pressure /*/ 100.0f*/);
 
 
             }
         }
-
-        override public void UpdateOnFingerTipPressureCallback(int index)
+        class OnMessageReceived : AndroidJavaProxy
         {
-            if (devices[index].IsFingerTipPressureEnabled)
+            int id;
+            public OnMessageReceived(int id) : base("mudraAndroidSDK.interfaces.callback.OnMessageReceived")
             {
-
-                devicesJO[index].Call("setOnPressureReady", new OnFingertipPressureReady(index));
-
+                this.id = id;
+                Debug.Log("Set Up On Message Received");
             }
-            else
+            void run(byte[] data)
             {
+                byte header = data[0];
 
-                devicesJO[index].Call("setOnPressureReady", null);
+                if (header == 0x60)
+                {
+                    //Pressure;
+                    // Debug.Log("received pressure" + (float)data[1]);
+                    //devices[id].deviceData.fingerTipPressure = (float)data[1] / 100.0f;
+                }
+                if (header == 0x61)
+                {
+                    //Pressure;
+                    // Debug.Log("received gesture" + (NewGestureType)((int)data[1]));
 
+                    devices[id].deviceData.lastGesture = (GestureType)((int)data[1]);
+                }
             }
 
         }
-
-        class OnAirMousePositionChanged : AndroidJavaProxy
-        {
-            MudraUnityAndroidPlugin _unityPlugin;
-
-            public OnAirMousePositionChanged(MudraUnityAndroidPlugin unityplugin) : base("MudraAndroidSDK.Mudra$OnAirMousePositionChanged") { _unityPlugin = unityplugin; }
-
-            void run(float[] positionChanged)
-            {
-                // _unityPlugin.SetLastAirMousePositionChange(positionChanged);
-            }
-        }
-
-        override protected void UpdateAirMousePositionChangedCallback()
-        {
-            if (_isAirMouseEnabled)
-                _mudraDevices.Call("setOnAirMousePositionChanged", new OnAirMousePositionChanged(this));
-            else
-                _mudraDevices.Call("setOnAirMousePositionChanged", null);
-        }
-
         class OnImuQuaternionReady : AndroidJavaProxy
         {
             MudraUnityAndroidPlugin _unityPlugin;
@@ -316,6 +266,286 @@ namespace Mudra.Unity
                 devices[id].OnQuaternion(quaternion);
             }
         }
+        class OnNavigationPointerReady : AndroidJavaProxy
+        {
+            int id;
+            public OnNavigationPointerReady(int id) : base("mudraAndroidSDK.interfaces.callback.OnNavigationPointerReady")
+            {
+                this.id = id;
+                Debug.Log("Set Up OnNavigationPointerReady");
+            }
+            void run(int delta_x, int delta_y)
+            {
+                devices[id].OnMouseDelta(delta_x, delta_y);
+
+            }
+
+        }
+        class MudraDelegate : AndroidJavaProxy
+        {
+            MudraUnityAndroidPlugin plugin;
+            public MudraDelegate(MudraUnityAndroidPlugin plugin) : base("mudraAndroidSDK.interfaces.MudraDelegate")
+            {
+                this.plugin = plugin;
+                Debug.Log("Created Mudra Delegate");
+            }
+
+
+            void onDeviceDiscovered(AndroidJavaObject mudraDevice)
+            {
+                Debug.Log("Discovered Devices");
+                AndroidJavaClass jcu = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                AndroidJavaObject jo = jcu.GetStatic<AndroidJavaObject>("currentActivity");
+                AndroidJavaObject context = jo.Call<AndroidJavaObject>("getApplicationContext");
+
+                Debug.Log(mudraDevice.Get<string>("deviceName"));
+                mudraDevice.Call("connectDevice", context);
+            }
+
+            void onDeviceConnected(AndroidJavaObject mudraDevice)
+            {
+                devicesJO.Add(mudraDevice);
+
+                Debug.Log("Add Devices To Queue");
+                Debug.Log(mudraDevice.Get<string>("deviceName"));
+
+                DeviceIdentifier identifier;
+                identifier.id = devices.Count;
+
+
+                PluginPlatform.deviceCreationQueue.Add(identifier);
+                plugin.OnDeviceConnected.Invoke();
+
+            }
+
+            void onDeviceDisconnected(AndroidJavaObject mudraDevice)
+            {
+                Debug.Log("DeviceDisconnected");
+
+                devices.RemoveAt(devices.Count - 1);
+                devicesJO.RemoveAt(devicesJO.Count - 1);
+                plugin.OnDeviceDisconnected.Invoke();
+
+            }
+        }
+        class OnButtonChanged : AndroidJavaProxy
+        {
+            int id;
+            public OnButtonChanged(int id) : base("mudraAndroidSDK.interfaces.callback.OnButtonChanged")
+            {
+                this.id = id;
+                Debug.Log("Set Up OnButtonChanged");
+            }
+            void run(AndroidJavaObject value)
+            {
+                devices[id].OnButtonChanged((NavigationButtons)value.Call<int>("ordinal"));
+            }
+
+        }
+        #endregion
+        public override void Update()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void Close()
+        {
+            throw new NotImplementedException();
+        }
+
+
+
+        public override void SetupDevice(MudraDevice device)
+        {
+            AndroidJavaObject Model = new AndroidJavaClass("mudraAndroidSDK.enums.ModelType").GetStatic<AndroidJavaObject>("Embedded");
+
+            devicesJO[device.identifier.id].Call<bool>("setModelType", Model);
+
+            AndroidJavaObject firmwareMode = new AndroidJavaClass("mudraAndroidSDK.enums.DeviceMode").GetStatic<AndroidJavaObject>("ANDROID");
+
+            devicesJO[device.identifier.id].Call("setDeviceMode", firmwareMode);
+
+            AndroidJavaObject NavigationType = new AndroidJavaClass("mudraAndroidSDK.enums.NavigationType").GetStatic<AndroidJavaObject>("POINTER_MODE");
+
+            devicesJO[device.identifier.id].Call("setNavigationType", NavigationType);
+
+            UpdateOnGestureReadyCallback(device.identifier.id);
+            UpdateOnFingerTipPressureCallback(device.identifier.id);
+            UpdateOnQuaternionReadyCallback(device.identifier.id);
+            UpdateNavigationCallback(device.identifier.id);
+        }
+
+        #region General Use Commands
+        public override void SwitchToAirmouse(bool state)
+        {
+            for (int i = 0; i < devicesJO.Count; i++)
+            {
+                devicesJO[i].Call("setAirMouseActive", state);
+            }
+        }
+
+        public override void SetMainHand(int hand, int index)
+        {
+            AndroidJavaObject topValue;
+            if (hand == 0)
+            {
+                topValue = new AndroidJavaClass("mudraAndroidSDK.enums.HandType").GetStatic<AndroidJavaObject>("LEFT");
+            }
+            else
+            {
+                topValue = new AndroidJavaClass("mudraAndroidSDK.enums.HandType").GetStatic<AndroidJavaObject>("RIGHT");
+            }
+
+
+            //devicesJO[index].Call("setHand", topValue);
+
+
+        }
+
+        public override void ClearQueues()
+        {
+
+        }
+
+        public override string getFirmwareVersion(int id)
+        {
+            return devicesJO[id].Call<string>("getFirmwareVersion");
+        }
+
+        public override void SetNavigationSpeed(int speed, int index)
+        {
+
+            byte[] command = MudraConstants.NAVIGATION_SPEED;
+            ;
+            switch (speed)
+            {
+                case 0:
+                    command[2] = 0x00;
+                    command[4] = 0x00;
+                    break;
+                case 1:
+                    command[2] = 0x01;
+                    command[4] = 0x01;
+                    break;
+                case 2:
+                    command[2] = 0x07;
+                    command[4] = 0x07;
+                    break;
+
+                case 3:
+                    command[2] = 0x0F;
+                    command[4] = 0x0F;
+                    break;
+                case 4:
+                    command[2] = 0x15;
+                    command[4] = 0x15;
+                    break;
+                case 5:
+                    command[2] = 0x1E;
+                    command[4] = 0x1E;
+                    break;
+                case 6:
+                    command[2] = 0x25;
+                    command[4] = 0x25;
+                    break;
+                case 7:
+                    command[2] = 0x2D;
+                    command[4] = 0x2D;
+                    break;
+                case 8:
+                    command[2] = 0x3A;
+                    command[4] = 0x3A;
+                    break;
+                case 9:
+                    command[2] = 0x33;
+                    command[4] = 0x33;
+                    break;
+                case 10:
+                    command[2] = 0x3C;
+                    command[4] = 0x3C;
+                    break;
+
+            }
+
+            devicesJO[index].Call("sendGeneralCommand", command, null);
+
+        }
+        public override void UpdateOnImuRawCallback(int index)
+        {
+            if (devices[index].IsAccRawEnabled)
+            {
+                Debug.Log("SetImuRawCallback");
+                devicesJO[index].Call("setOnImuAccRawReady", new OnImuAccRawReady(index));
+            }
+            else
+            {
+                devicesJO[index].Call("setOnImuAccRawReady", null);
+            }
+        }
+        public override void SendFirmwareCommand(byte[] command)
+        {
+            for (int i = 0; i < devicesJO.Count; i++)
+            {
+                devicesJO[i].Call("sendGeneralCommand", command, null);
+            }
+        }
+        //public override void setAirMousePointerActive(bool state)
+        //{
+        //    for (int i = 0; i < devicesJO.Count; i++)
+        //    {
+        //        devicesJO[i].Call("setAirMousePointerActive", state);
+        //    }
+        //}
+        //public override void setAirMousePressReleaseActive(bool state)
+        //{
+        //    for (int i = 0; i < devicesJO.Count; i++)
+        //    {
+        //        devicesJO[i].Call("setAirMousePressReleaseActive", state);
+        //    }
+        //}
+        public override void setGestureActive(bool state)
+        {
+            for (int i = 0; i < devicesJO.Count; i++)
+            {
+                devicesJO[i].Call("setGestureActive", state);
+            }
+        }
+        public override void setPressureActive(bool state)
+        {
+            for (int i = 0; i < devicesJO.Count; i++)
+            {
+                devicesJO[i].Call("setPressureActive", state);
+            }
+        }
+        public override void setAirTouchActive(bool state)
+        {
+            for (int i = 0; i < devicesJO.Count; i++)
+            {
+                devicesJO[i].Call("setAirTouchActive", state);
+            }
+        }
+        public override void sendHIDTO(bool appState, bool HIDState, int index)
+        {
+
+            devicesJO[index].Call("sendHIDTO", appState, HIDState);
+
+        }
+        public override void setNavigationActive(bool state)
+        {
+            for (int i = 0; i < devicesJO.Count; i++)
+            {
+                devicesJO[i].Call("setNavigationActive", state);
+            }
+        }
+
+
+
+        #endregion
+
+        #region NoLongerSupported
+
+
+
         class OnImuAccRawReady : AndroidJavaProxy
         {
             int id;
@@ -342,7 +572,7 @@ namespace Mudra.Unity
                 dataVector[1] /= data.Length;
                 dataVector[2] /= data.Length;
 
-                devices[id].OnAccRaw(dataVector);
+                // devices[id].OnAccRaw(dataVector);
 
             }
 
@@ -366,56 +596,11 @@ namespace Mudra.Unity
             }
 
         }
-        class OnAirmouseButton : AndroidJavaProxy
-        {
-            int id;
-
-            public OnAirmouseButton(int id) : base("mudraAndroidSDK.interfaces.callback.OnAirMouseButtonCallback")
-            {
-                this.id = id;
-                Debug.Log("SetUpCallback");
-            }
-
-            void run(int button)
-            {
-                //  Debug.Log("Weee");
-
-                // if (button == 0)
-                // devices[id].onPress.Invoke();
-
-
-
-                //  Debug.Log(quaternion);
-            }
-        }
-
-        override public void UpdateOnQuaternionReadyCallback(int index)
-        {
-            if (devices[index].IsImuQuaternionEnabled)
-            {
-                devicesJO[index].Call("setOnImuQuaternionReady", new OnImuQuaternionReady(index));
-            }
-            else
-            {
-                devicesJO[index].Call("setOnImuQuaternionReady", null);
-            }
-
-        }
-        public void UpdateAirmouseButtonCallback(int index)
+        public override void UpdateOnSNCReady(int index)
         {
 
-            devicesJO[index].Call("SetOnAirMouseButtons", new OnAirmouseButton(index));
-
-
-        }
-        public override void Update()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void Close()
-        {
-            throw new NotImplementedException();
+            devicesJO[index].Call("setOnSncReady", new OnSNCReady(index));
+            Debug.Log("sncSet");
         }
 
         public override void ResetQuaternion(int index)
@@ -424,112 +609,61 @@ namespace Mudra.Unity
             devicesJO[index].Call("resetAirMouse", dimentions);
         }
 
-        public override void SetupDevice(MudraDevice device)
-        {
-            throw new NotImplementedException();
-        }
+        //public override void ChangeScale(int Scale, int index)
+        //{
 
-        public override void ClearQueues()
-        {
-            for (int i = 0; i < devices.Count; i++)
-            {
-                devicesJO[i].Call("Clear");
-            }
-        }
+        //    switch (Scale)
+        //    {
+        //        case 0:
+        //            devicesJO[index].Call("sendGeneralCommand", MudraConstants.PRESSURE_SCALE_LOW, null);
+        //            break;
+        //        case 1:
+        //            devicesJO[index].Call("sendGeneralCommand", MudraConstants.PRESSURE_SCALE_MID, null);
+        //            break;
+        //        case 2:
+        //            devicesJO[index].Call("sendGeneralCommand", MudraConstants.PRESSURE_SCALE_HIGH, null);
+        //            break;
 
-        public override void UpdateOnSNCReady(int index)
-        {
+        //    }
 
-            devicesJO[index].Call("setOnSncReady", new OnSNCReady(index));
-            Debug.Log("sncSet");
+        //}
 
-        }
+        //public override void SetPressureSensitivity(int sens, int index)
+        //{
+        //    byte[] command = { };
 
-        public override string getFirmwareVersion(int id)
-        {
-            return devicesJO[id].Call<string>("getFirmwareVersion");
-        }
 
-        public override void SetAirMouseSpeed(int speed)
-        {
-            for (int i = 0; i < devicesJO.Count; i++)
-            {
-                byte[] command = MudraConstants.AIRMOUSE_SPEED;
-                ;
-                switch (speed)
-                {
-                    case 0:
-                        command[2] = 0x00;
-                        command[4] = 0x00;
-                        break;
-                    case 1:
-                        command[2] = 0x01;
-                        command[4] = 0x01;
-                        break;
-                    case 2:
-                        command[2] = 0x02;
-                        command[4] = 0x02;
-                        break;
 
-                    case 3:
-                        command[2] = 0x03;
-                        command[4] = 0x03;
-                        break;
-                    case 4:
-                        command[2] = 0x04;
-                        command[4] = 0x04;
-                        break;
-                    case 5:
-                        command[2] = 0x05;
-                        command[4] = 0x05;
-                        break;
-                    case 6:
-                        command[2] = 0x06;
-                        command[4] = 0x06;
-                        break;
-                    case 7:
-                        command[2] = 0x07;
-                        command[4] = 0x07;
-                        break;
-                    case 8:
-                        command[2] = 0x08;
-                        command[4] = 0x08;
-                        break;
-                    case 9:
-                        command[2] = 0x09;
-                        command[4] = 0x09;
-                        break;
-                    case 10:
-                        command[2] = 0x010;
-                        command[4] = 0x010;
-                        break;
-                }
-                devicesJO[i].Call("sendGeneralCommand", command, null);
-            }
-        }
+        //    switch (sens)
+        //    {
+        //        case 0:
+        //            command = MudraConstants.PRESSURE_SENS_LOW;
+        //            break;
+        //        case 1:
+        //            command = MudraConstants.PRESSURE_SENS_MIDLOW;
+        //            break;
+        //        case 2:
+        //            command = MudraConstants.PRESSURE_SENS_MID;
 
-        public override void UpdateOnImuRawCallback(int index)
-        {
-            if (devices[index].IsAccRawEnabled)
-            {
-                Debug.Log("SetImuRawCallback");
-                devicesJO[index].Call("setOnImuAccRawReady", new OnImuAccRawReady(index));
-            }
-            else
-            {
-                devicesJO[index].Call("setOnImuAccRawReady", null);
-            }
-        }
+        //            break;
+        //        case 3:
+        //            command = MudraConstants.PRESSURE_SENS_MIDHIGH;
 
-        public override void SendFirmwareCommand(byte[] command)
-        {
-            for (int i = 0; i < devicesJO.Count; i++)
-            {
-                devicesJO[i].Call("sendGeneralCommand", command, null);
-            }
-        }
+        //            break;
+        //        case 4:
+        //            command = MudraConstants.PRESSURE_SENS_HIGH;
+
+        //            break;
+        //    }
+        //    devicesJO[index].Call("sendGeneralCommand", command, null);
+
+
+        //}
+
+        #endregion
     }
 }
+
 
 
 public enum LoggingSeverity

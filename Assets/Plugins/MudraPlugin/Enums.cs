@@ -19,9 +19,17 @@
         SwipeRight,
         LongPres,
         Fitting,
-        Pinching
+        Pinching,
+        Tap,
+        DoubleTwist
     };
 
+    public enum NavigationButtons
+    {
+        
+        Release,
+        Press,
+    }
     public enum Feature
     {
         RawData,

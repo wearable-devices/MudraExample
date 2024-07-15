@@ -8,24 +8,18 @@ namespace Mudra.Unity
     public struct DeviceData
     {
 
-        public Vector2? airMousePos;
+        public Vector2? airMousePosDelta;
         public float? fingerTipPressure;
         public GestureType? lastGesture;
         public Quaternion? quaternion;
-        public Vector3? accRaw;
-        public Vector3? sncRaw;
-
+        public float? click;
+        public bool sendToApp;
+        public bool sendToHID;
     }
 
     [StructLayout(LayoutKind.Sequential,CharSet = CharSet.Ansi)]
     public struct DeviceIdentifier
     {
-        //[MarshalAs(UnmanagedType.LPStr)]
-        //public string name;
-
-        //[MarshalAs(UnmanagedType.LPStr)]
-        //public string uuid;
-
         public int id;
     }
 }

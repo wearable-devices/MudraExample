@@ -9,7 +9,7 @@ namespace Mudra.Unity
         public static readonly byte[] AIRMOUSE_OFF =            { 0x07, 0x07, 0x00 };
        
         //Airmouse speed has 1 byte for code 0x44 and then two bytes for x speed and two bytes for y speed, default is [5,5]
-        public static readonly byte[] AIRMOUSE_SPEED =          { 0x44, 0x00, 0x05, 0x00, 0x05 };
+        public static readonly byte[] NAVIGATION_SPEED =          { 0x44, 0x00, 0x05, 0x00, 0x05 };
 
         public static readonly byte[] PRESSURE_SENS_LOW =       { 0x21, 0x30 };
         public static readonly byte[] PRESSURE_SENS_MIDLOW =    { 0x21, 0x40 };

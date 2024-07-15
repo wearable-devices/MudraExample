@@ -90,8 +90,7 @@ namespace Mudra.Unity
             SetOnGestureExtern(ref device.identifier, OnGesture);
             SetOnQuaternionExtern(ref device.identifier, OnQuaternion);
             SetOnPressureExtern(ref device.identifier, OnPressure);
-            SetOnImuAccRawExtern(ref device.identifier, OnImuAccRaw);
-            SetOnSNCRawExtern(ref device.identifier, OnSNCRaw);
+       
             SetMessageRecievedExtern(ref device.identifier, OnMessageRecieved);
             SetOnMouseMovedExtern(OnMouseMoved);
 
@@ -197,18 +196,7 @@ namespace Mudra.Unity
 
         }
 
-        [MonoPInvokeCallback(typeof(OnImuAccRawCallbackType))]
-        public static void OnImuAccRaw(float x, float y, float z, DeviceIdentifier device)
-        {
-            devices[device.id].OnAccRaw(new float[] {x,y,z });
-        }
-
-        [MonoPInvokeCallback(typeof(OnSNCRawCallbackType))]
-        public static void OnSNCRaw(float x, float y, float z, DeviceIdentifier device)
-        {
-            devices[device.id].OnSNCRaw(new float[] { x, y, z });
-        }
-
+      
         [MonoPInvokeCallback(typeof(OnMessageCallbackType))]
         public static void OnMessageRecieved(IntPtr data, DeviceIdentifier device)
         {
@@ -222,7 +210,7 @@ namespace Mudra.Unity
             }
 
             float[] sncData = {dataAsBytes[1], dataAsBytes[2], dataAsBytes[3] };
-            devices[device.id].OnSNCRaw(sncData);
+           // devices[device.id].OnSNCRaw(sncData);
             
         }
 
@@ -243,10 +231,7 @@ namespace Mudra.Unity
             throw new System.NotImplementedException();
         }
 
-        protected override void UpdateAirMousePositionChangedCallback()
-        {
-            throw new System.NotImplementedException();
-        }
+     
 
         public override void UpdateOnFingerTipPressureCallback(int index)
         {
@@ -315,45 +300,45 @@ namespace Mudra.Unity
           
         }
 
-        public override void SetAirMouseSpeed(int speed)
-        {
-            for (int i = 0; i < devices.Count; i++)
-            {
-                SetAirMouseSpeedExtern(ref devices[i].identifier, speed,speed);
-            }
-        }
+        //public override void SetAirMouseSpeed(int speed)
+        //{
+        //    for (int i = 0; i < devices.Count; i++)
+        //    {
+        //        SetAirMouseSpeedExtern(ref devices[i].identifier, speed,speed);
+        //    }
+        //}
 
-        public override void SetMainHand(int hand)
-        {
-            for (int i = 0; i < devices.Count; i++)
-            {
-                SetHandExtern(ref devices[i].identifier, hand);
-            }
-        }
+        //public override void SetMainHand(int hand)
+        //{
+        //    for (int i = 0; i < devices.Count; i++)
+        //    {
+        //        SetHandExtern(ref devices[i].identifier, hand);
+        //    }
+        //}
 
-        public override void ChangeScale(int Scale)
-        {
-            for (int i = 0; i < devices.Count; i++)
-            {
+        //public override void ChangeScale(int Scale)
+        //{
+        //    for (int i = 0; i < devices.Count; i++)
+        //    {
                
-                // Call unmanaged code
-                switch (Scale)
-                {
-                    case 0:
-                        SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SCALE_LOW);
-                        break;
-                    case 1:
-                        SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SCALE_MID);
-                        break;
-                    case 2:
-                        SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SCALE_HIGH);
+        //        // Call unmanaged code
+        //        switch (Scale)
+        //        {
+        //            case 0:
+        //                SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SCALE_LOW);
+        //                break;
+        //            case 1:
+        //                SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SCALE_MID);
+        //                break;
+        //            case 2:
+        //                SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SCALE_HIGH);
 
-                        break;
+        //                break;
 
 
-                }
-            }
-        }
+        //        }
+        //    }
+        //}
         public void SendFirmwareCommandInternal(ref DeviceIdentifier identifier, byte[] command)
         {
             IntPtr unmanagedPointer = Marshal.AllocHGlobal(sizeof(byte) * command.Length);
@@ -365,30 +350,30 @@ namespace Mudra.Unity
 
         }
 
-        public override void SetPressureSensitivity(int sens)
-        {
-            for (int i = 0; i < devices.Count; i++)
-            {
-                switch (sens)
-                {
-                    case 0:
-                        SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SENS_LOW);
-                        break;
-                    case 1:
-                        SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SENS_MIDLOW);
-                        break;
-                    case 2:
-                        SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SENS_MID);
-                        break;
-                    case 3:
-                        SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SENS_MIDHIGH);
-                        break;
-                    case 4:
-                        SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SENS_HIGH);
-                        break;
-                }
-            }
-        }
+        //public override void SetPressureSensitivity(int sens)
+        //{
+        //    for (int i = 0; i < devices.Count; i++)
+        //    {
+        //        switch (sens)
+        //        {
+        //            case 0:
+        //                SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SENS_LOW);
+        //                break;
+        //            case 1:
+        //                SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SENS_MIDLOW);
+        //                break;
+        //            case 2:
+        //                SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SENS_MID);
+        //                break;
+        //            case 3:
+        //                SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SENS_MIDHIGH);
+        //                break;
+        //            case 4:
+        //                SendFirmwareCommandInternal(ref devices[i].identifier, MudraConstants.PRESSURE_SENS_HIGH);
+        //                break;
+        //        }
+        //    }
+        //}
        
 
         public override void ClearQueues()

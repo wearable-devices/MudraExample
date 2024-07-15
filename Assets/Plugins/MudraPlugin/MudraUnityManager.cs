@@ -17,51 +17,72 @@ public class MudraUnityManager : MonoBehaviour
 
     public static PluginPlatform plugin;
 
-    [SerializeField] bool AirMouseState = false;
-    [SerializeField] MudraScale Scale = MudraScale.MID;
-    [SerializeField] MudraSensitivity Sensitivity = MudraSensitivity.MID;
+    [SerializeField] float mousespeed;
     [SerializeField] int AirMouseSpeed = 5;
     [SerializeField] HandType Hand = HandType.Left;
+   
+    [SerializeField] bool AirMouseState = false;
+    [SerializeField] bool Pressure = false;
+    [SerializeField] bool Gesture = false;
+    [SerializeField] bool Quaternion = false;
 
-    public void SetAirmouseState(bool state)
+    [SerializeField] UnityEvent<int> OnConnectedEvent;
+    [SerializeField] UnityEvent<int> OnDisConnectedEvent;
+
+
+
+
+    public void SetNavigationState(bool state,int index)
     {
-        if (plugin == null) return;
-
-        plugin.SwitchToAirmouse(state);
-        AirMouseState = state;
+        PluginPlatform.devices[index].isNavigationEnabled = state;
     }
-    public void SetScale(int scale)
+    public void SetPressureState(bool state, int index)
     {
-        if (plugin == null) return;
-
-        plugin.ChangeScale(scale);
-        Scale = (MudraScale)scale;
+        PluginPlatform.devices[index].IsFingerTipPressureEnabled = state;
     }
-    public void SetPressureSensitivity(int sens)
+    public void SetGestureState(bool state, int index)
     {
-        if (plugin == null) return;
-
-        plugin.SetPressureSensitivity(sens);
-        Sensitivity = (MudraSensitivity)sens;
+        PluginPlatform.devices[index].IsGestureEnabled = state;
     }
-    public void SetAirMouseSpeed(int speed)
+    public void SetQuaternionState(bool state, int index)
+    {
+        PluginPlatform.devices[index].IsImuQuaternionEnabled = state;
+    }
+
+    public void SetAirMouseSpeed(int speed, int index)
     {
         if (plugin == null) return;
 
-        plugin.SetAirMouseSpeed(speed);
+        plugin.SetNavigationSpeed(speed,  index);
         AirMouseSpeed = speed;
     }
-    public void SetHand(int hand)
+    public void SetHand(int hand, int index)
     {
         if (plugin == null) return;
 
-        plugin.SetMainHand(hand);
+        plugin.SetMainHand(hand,  index);
         Hand = (HandType)hand;
     }
+    public void sendHIDTO(bool AppState, bool HIDState, int index)
+    {
+        PluginPlatform.devices[index].deviceData.sendToHID = HIDState;
+        PluginPlatform.devices[index].deviceData.sendToApp = AppState;
+
+        plugin.sendHIDTO(AppState, HIDState, index);
+    }
+
     public void SendFirmwareCommand(byte[] command)
     {
         plugin.SendFirmwareCommand(command);
     }
+
+    
+    public void ResetGesture()
+    {
+        PluginPlatform.devices[0].deviceData.lastGesture = GestureType.None;
+    }
+
+
 #if UNITY_EDITOR
     [MenuItem("Mudra/Create Mudra Manager")]
     public static void AddManager()
@@ -72,20 +93,16 @@ public class MudraUnityManager : MonoBehaviour
         EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
     }
 #endif
-
-
-
     private void Start()
     {
         Init();
-        Cursor.visible = true;
-    }
 
+    }
     private void Update()
     {
         if (plugin != null)
         {
-            plugin.MousePos();
+
         }
 
 #if ENABLE_INPUT_SYSTEM
@@ -94,26 +111,32 @@ public class MudraUnityManager : MonoBehaviour
 
             for (int i = 0; i < PluginPlatform.deviceCreationQueue.Count; i++)
             {
+                Debug.Log(PluginPlatform.deviceCreationQueue.Count);
+
                 Debug.Log("Creating Device");
+                DeviceIdentifier identifier = PluginPlatform.deviceCreationQueue[i];
+
                 MudraDevice newDevice = (MudraDevice)InputSystem.AddDevice(new InputDeviceDescription
                 {
                     interfaceName = "Mudra",
                     product = "Sample Mudra"
                 });
-                plugin.SetupDevice(newDevice);
+                newDevice.identifier = identifier;
+                PluginPlatform.deviceCreationQueue.Clear();
+
                 PluginPlatform.devices.Add(newDevice);
-                PluginPlatform.deviceCreationQueue.RemoveAt(i);
+                plugin.SetupDevice(newDevice);
+                OnDeviceConnected(identifier.id);
+
             }
 
-           
+
 
         }
 #endif
     }
     public void Init()
     {
-
-
 
         if (plugin == null)
         {
@@ -122,24 +145,33 @@ public class MudraUnityManager : MonoBehaviour
 #elif (UNITY_ANDROID)
 Debug.Log("Create New Unity Plugin");
             plugin = new MudraUnityAndroidPlugin();
+
 #elif (UNITY_EDITOR_OSX || UNITY_IOS)
             //Logger.Print("MudraUnityPlugin new iOS_PlugIn()");
             plugin = new  MudraUnityiOSPlugin();
 #endif
         }
+        Debug.Log("Init");
 
-        if (plugin != null)
-        {
-            plugin.Init();
-            plugin.onInit += () =>
-            {
-                SetAirmouseState(AirMouseState);
-                SetScale((int)Scale);
-                SetPressureSensitivity((int)Sensitivity);
-                SetAirMouseSpeed(AirMouseSpeed);
-                SetHand((int)Hand);
-            };
-        }
+        plugin.Init();
+
+    }
+    public void OnDeviceConnected(int i)
+    {
+        PluginPlatform.devices[i].isNavigationEnabled = AirMouseState;
+        PluginPlatform.devices[i].IsFingerTipPressureEnabled = Pressure;
+        PluginPlatform.devices[i].IsGestureEnabled = Gesture;
+        PluginPlatform.devices[i].IsImuQuaternionEnabled = Quaternion;
+
+        sendHIDTO(false, false, i);
+        SetAirMouseSpeed(AirMouseSpeed,i);
+        SetHand((int)Hand,i);
+
+        OnConnectedEvent.Invoke(i);
+    }
+    public void OnDeviceDisconnected(int i)
+    {
+        OnDisConnectedEvent.Invoke(i);
     }
     public void GetDevices()
     {
@@ -148,15 +180,11 @@ Debug.Log("Create New Unity Plugin");
         MudraUnityiOSPlugin.ConnectToDevicesExtern();
 #endif
     }
-    public void resetQuat()
+ 
+    private void OnApplicationQuit()
     {
-        if (plugin != null)
-            plugin.ResetQuaternion(0);
-    }
-
-    public static void ClearQueues()
-    {
-        plugin.ClearQueues();
+        SetPressureState(false,0);
+        SetGestureState(false, 0);
     }
 
 }

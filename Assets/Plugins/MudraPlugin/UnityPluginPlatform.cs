@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Mudra.Unity;
+using UnityEngine.Events;
 namespace Mudra.Unity
 {
     public delegate void OnLoggingMessageCallBack(string message);
@@ -18,23 +19,38 @@ namespace Mudra.Unity
         abstract public void ResetQuaternion(int index);
         abstract public void SwitchToDpad();
         abstract public void SwitchToAirmouse(bool state);
-        abstract public void SetAirMouseSpeed(int speed);
-        abstract public void SetMainHand(int hand);
-        abstract public void ChangeScale(int Scale);
-        abstract public void SetPressureSensitivity(int sens);
+        abstract public void SetNavigationSpeed(int speed, int index);
+        abstract public void SetMainHand(int hand, int index);
+       // abstract public void ChangeScale(int Scale,int index);
+       // abstract public void SetPressureSensitivity(int sens, int index);
         abstract public void ClearQueues();
         abstract public void SendFirmwareCommand(byte[] command);
+
+
+        //new navigation
+      //  abstract public void setAirMousePointerActive(bool state);
+      //  abstract public void setAirMousePressReleaseActive(bool state);
+        abstract public void setGestureActive(bool state);
+        abstract public void setPressureActive(bool state);
+        abstract public void setAirTouchActive(bool state);
+        abstract public void sendHIDTO(bool state, bool firmware,int index);
+        abstract public void setNavigationActive(bool state);
+        abstract public void UpdateNavigationCallback(int index);
+
         public virtual void MousePos() { }
         public static List<DeviceIdentifier> deviceCreationQueue = new List<DeviceIdentifier>();
 
         public delegate void onInitFunc();
         public event onInitFunc onInit;
 
+        public UnityEvent OnDeviceConnected = new UnityEvent();
+        public UnityEvent OnDeviceDisconnected = new UnityEvent();
         public static bool HasDevices
         {
             get => devices.Count > 0;
             private set => HasDevices = value;
         }
+
         #region OnGestureReady
 
         abstract public void UpdateOnGestureReadyCallback(int index);
@@ -47,27 +63,6 @@ namespace Mudra.Unity
 
         #endregion
 
-        #region OnAirMousePositionChanged
-        protected bool _isAirMouseEnabled = true;
-        public bool IsAirMouseEnabled
-        {
-            get { return _isAirMouseEnabled; }
-            set
-            {
-                if (_isAirMouseEnabled != value)
-                {
-                    _isAirMouseEnabled = value;
-                    UpdateAirMousePositionChangedCallback();
-                }
-            }
-        }
-        public void InvokeInitFinished()
-        {
-            onInit?.Invoke();
-            Debug.Log("Invoke Init");
-        }
-        abstract protected void UpdateAirMousePositionChangedCallback();
-        #endregion
         public abstract string getFirmwareVersion(int id);
         public abstract void SetupDevice(MudraDevice device);
         abstract public void UpdateOnQuaternionReadyCallback(int index);
@@ -78,7 +73,8 @@ namespace Mudra.Unity
             foreach (var device in devices)
             {
                 device.deviceData.lastGesture = null;
-                device.deviceData.quaternion = null;
+                //device.deviceData.quaternion = null;
+
                 device.deviceData.fingerTipPressure = null;
             }
         }

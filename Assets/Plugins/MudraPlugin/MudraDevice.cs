@@ -19,17 +19,17 @@ namespace Mudra.Unity
         [InputControl(layout = "Axis")]
         public float pressure;
 
-        //[InputControl(layout = "Quaternion")]
-        //public Quaternion quaternion;
-
         [InputControl(layout = "Integer")]
         public int lastGesture;
 
-        //[InputControl(layout = "Vector3")]
-        //public Vector3 AccRaw;
+        [InputControl(layout = "Vector2")]
+        public Vector2 mousePosDelta;
 
-        //[InputControl(layout = "Vector3")]
-        //public Vector3 SncRaw;
+        [InputControl(layout = "Quaternion")]
+        public Quaternion quaternion;
+
+        [InputControl(layout = "Button")]
+        public float click;
     }
 
 
@@ -45,11 +45,10 @@ namespace Mudra.Unity
         public DeviceData deviceData;
 
         public AxisControl pressure { get; private set; }
-       // public QuaternionControl quaternion { get; private set; }
         public IntegerControl lastGesture { get; private set; }
-       // public Vector3Control accRaw { get; private set; }
-       // public Vector3Control sncRaw { get; private set; }
-
+        public Vector2Control mousePosDelta { get; private set; }
+        public QuaternionControl quaternion { get; private set; }
+        public ButtonControl click { get; private set; }
         public MudraDevice(DeviceIdentifier identifier)
         {
             this.identifier = identifier;
@@ -103,7 +102,19 @@ namespace Mudra.Unity
                 }
             }
         }
-
+        protected bool _isNavigationEnabled = true;
+        public bool isNavigationEnabled
+        {
+            get { return _isNavigationEnabled; }
+            set
+            {
+                if (_isNavigationEnabled != value)
+                {
+                    _isNavigationEnabled = value;
+                    MudraUnityManager.plugin.UpdateNavigationCallback(identifier.id);
+                }
+            }
+        }
         protected bool _isImuAccRawEnabled = true;
 
         public bool IsAccRawEnabled
@@ -122,17 +133,22 @@ namespace Mudra.Unity
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         private static void Init()
         {
+
             InputSystem.RegisterLayout<MudraDevice>(
                 matches: new InputDeviceMatcher()
                     .WithInterface("Mudra"));
         }
 
-
-
-
 #if UNITY_EDITOR
+        [MenuItem("Mudra/Register Mudra Device")]
+        private static void InitEditor()
+        {
 
-        //[MenuItem("Tools/MudraDevice")]
+            InputSystem.RegisterLayout<MudraDevice>(
+                matches: new InputDeviceMatcher()
+                    .WithInterface("Mudra"));
+        }
+
 #endif
         static MudraDevice()
         {
@@ -145,11 +161,10 @@ namespace Mudra.Unity
             base.FinishSetup();
 
             pressure = GetChildControl<AxisControl>("pressure");
-           // quaternion = GetChildControl<QuaternionControl>("quaternion");
             lastGesture = GetChildControl<IntegerControl>("lastGesture");
-           // accRaw = GetChildControl<Vector3Control>("accRaw");
-           // sncRaw = GetChildControl<Vector3Control>("sncRaw");
-
+            mousePosDelta = GetChildControl<Vector2Control>("mousePosDelta");
+            quaternion = GetChildControl<QuaternionControl>("quaternion");
+            click = GetChildControl<ButtonControl>("click");
             Debug.Log("----------------------------------Finished Setup---------------------------------------");
         }
 
@@ -158,22 +173,21 @@ namespace Mudra.Unity
             deviceData.lastGesture = gesture;
         }
 
+        public void OnMouseDelta(float delta_x, float delta_y)
+        {
+            deviceData.airMousePosDelta = new Vector2(delta_x, delta_y);
+        }
+
+        public void OnButtonChanged(NavigationButtons button)
+        {
+            deviceData.click = (int)button;
+        }
         public void OnPressure(float pressure)
         {
+
             deviceData.fingerTipPressure = pressure;
-        }
-        public void OnAccRaw(float[] acc)
-        {
-            deviceData.accRaw = new Vector3(acc[0], acc[1], acc[2]);
-        }
 
-        public void OnSNCRaw(float[] snc)
-        {
-            //deviceData.sncRaw = new Vector3(snc[0], snc[1], snc[2]);
-            //Debug.Log("AAAAAAAAAAAA"+deviceData.sncRaw);
         }
-
-
         public void OnQuaternion(Quaternion quaternion)
         {
             float angle = 2 * (Mathf.Acos(quaternion[0]));
@@ -189,37 +203,58 @@ namespace Mudra.Unity
             deviceData.quaternion = newQuat;
 
         }
-
         private Quaternion rightCoordToUnityCord(Quaternion q)
         {
             return new Quaternion(q.x, q.y * -1, q.z * -1, q.w);
         }
+        #region No Longer Supported
+        //public void OnAccRaw(float[] acc)
+        //{
+        //    //deviceData.accRaw = new Vector3(acc[0], acc[1], acc[2]);
+        //}
+
+        //public void OnSNCRaw(float[] snc)
+        //{
+        //    //deviceData.sncRaw = new Vector3(snc[0], snc[1], snc[2]);
+        //    //Debug.Log("AAAAAAA
+        //    //AAAAA"+deviceData.sncRaw);
+        //}
+
+
+
+
+
+        #endregion
+
 
         public void OnUpdate()
         {
             MudraDeviceState state = new MudraDeviceState();
 
             if (deviceData.fingerTipPressure != null)
+            {
                 state.pressure = (float)deviceData.fingerTipPressure;
-
-            // if (deviceData.quaternion != null)
-            //state.quaternion = (Quaternion)deviceData.quaternion;
+            }
 
             if (deviceData.lastGesture != null)
             {
                 state.lastGesture = (int)deviceData.lastGesture;
-                Debug.Log("AAAAAAAAAA:" + state.lastGesture);
             }
 
-            if (deviceData.accRaw != null)
-               // state.AccRaw = (Vector3)deviceData.accRaw;
-
-            if (deviceData.sncRaw != null)
+            if (deviceData.airMousePosDelta != null)
             {
-               // state.SncRaw = (Vector3)deviceData.sncRaw;
-                //Debug.Log((Vector3)deviceData.sncRaw);
+                state.mousePosDelta = (Vector2)deviceData.airMousePosDelta;
+            }
+            if (deviceData.quaternion != null)
+            {
+                state.quaternion = (Quaternion)deviceData.quaternion;
+            }
+            if (deviceData.click != null)
+            {
+                state.click = (int)deviceData.click;
             }
             InputSystem.QueueDeltaStateEvent(this, state);
+
         }
 
         [RuntimeInitializeOnLoadMethod]

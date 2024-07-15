@@ -9,7 +9,6 @@ using UnityEditor.PackageManager;
 public class MudraSettings : EditorWindow
 {
     string path = "Assets/Plugins/MudraSettings.asset";
-    public static MudraSettingsObject settings;
     static SerializedObject obj;
     static AddRequest Request;
 
@@ -32,34 +31,6 @@ public class MudraSettings : EditorWindow
     }
     void OnGUI()
     {
-        //settings = EditorGUILayout.ObjectField("", settings, typeof(MudraSettingsObject), true) as MudraSettingsObject;
-
-//if (settings == null)
-//{
-//    if (GUILayout.Button("Create Settings Asset"))
-//    {
-//        MudraSettingsObject example = ScriptableObject.CreateInstance<MudraSettingsObject>();
-//        AssetDatabase.CreateAsset(example, path);
-//        AssetDatabase.SaveAssets();
-//        AssetDatabase.Refresh();
-//        EditorUtility.FocusProjectWindow();
-//        Selection.activeObject = example;
-//        settings = example;
-//        obj = new SerializedObject(settings);
-//    }
-//}
-//else
-//{
-//    if (obj == null)
-//    {
-//        obj = new SerializedObject(settings);
-//    }
-//    EditorGUILayout.PropertyField(obj.FindProperty("PressureEnabled"));
-//    EditorGUILayout.PropertyField(obj.FindProperty("QuaternionEnabled"));
-//    EditorGUILayout.PropertyField(obj.FindProperty("GesturesEnabled"));
-//    obj.ApplyModifiedProperties();
-
-//}
 
 #if !ENABLE_INPUT_SYSTEM
 
@@ -128,14 +99,5 @@ public class MudraSettings : EditorWindow
         }
 
 #endif
-
-
-//#if true
-//        if (GUILayout.Button("Test"))
-//        {
-//            PlayerSettings.iOS.appleEnableAutomaticSigning = true;
-//            PlayerSettings.iOS.backgroundModes = iOSBackgroundMode.BluetoothCentral & iOSBackgroundMode.BluetoothPeripheral;
-//        }
-//#endif
     }
 }
