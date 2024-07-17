@@ -215,7 +215,6 @@ namespace Mudra.Unity
 
             void run(float pressure)
             {
-                Debug.Log(pressure);
 
                 devices[id].OnPressure(pressure /*/ 100.0f*/);
 

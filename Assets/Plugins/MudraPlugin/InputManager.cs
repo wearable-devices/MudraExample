@@ -43,14 +43,12 @@ public class InputManager : MonoBehaviour
     public void OnGesture(InputValue value)
     {
         lastGesture = value.Get<int>();
-        //Debug.Log("Gesture");
 
     }
 
     public void OnClick(InputValue value)
     {
         NavigationButtons clickValue = (NavigationButtons)value.Get<float>();
-        Debug.Log(clickValue);
 
         if (clickValue == NavigationButtons.Press)
             OnClickEvent.Invoke();
