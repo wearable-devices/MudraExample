@@ -60,11 +60,10 @@ public class InputManager : MonoBehaviour
     }
     public void OnMousePC(InputValue value)
     {
+        if(PluginPlatform.HasDevices)
         if (!PluginPlatform.devices[0].deviceData.sendToHID)
             return;
-        Debug.Log(value.Get<float>());
         NavigationButtons clickValue = (NavigationButtons)value.Get<float>();
-        Debug.Log(clickValue);
 
         if (clickValue == NavigationButtons.Press)
             OnClickEvent.Invoke();
@@ -76,8 +75,9 @@ public class InputManager : MonoBehaviour
     }
     public void OnMousePCPos(InputValue value)
     {
-        if (!PluginPlatform.devices[0].deviceData.sendToHID)
-            return;
+        if (PluginPlatform.HasDevices)
+            if (!PluginPlatform.devices[0].deviceData.sendToHID)
+                return;
         mousePos = value.Get<Vector2>();
     }
 
@@ -90,7 +90,7 @@ public class InputManager : MonoBehaviour
         DontDestroyOnLoad(this.gameObject);
         ResetMousePos();
     }
-   
+
     public void ResetMousePos()
     {
         mousePos = new Vector2(Screen.width / 2, Screen.height / 2);

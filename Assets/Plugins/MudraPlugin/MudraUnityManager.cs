@@ -20,7 +20,7 @@ public class MudraUnityManager : MonoBehaviour
     [SerializeField] float mousespeed;
     [SerializeField] int AirMouseSpeed = 5;
     [SerializeField] HandType Hand = HandType.Left;
-   
+
     [SerializeField] bool AirMouseState = false;
     [SerializeField] bool Pressure = false;
     [SerializeField] bool Gesture = false;
@@ -32,7 +32,7 @@ public class MudraUnityManager : MonoBehaviour
 
 
 
-    public void SetNavigationState(bool state,int index)
+    public void SetNavigationState(bool state, int index)
     {
         PluginPlatform.devices[index].isNavigationEnabled = state;
     }
@@ -53,14 +53,14 @@ public class MudraUnityManager : MonoBehaviour
     {
         if (plugin == null) return;
 
-        plugin.SetNavigationSpeed(speed,  index);
+        plugin.SetNavigationSpeed(speed, index);
         AirMouseSpeed = speed;
     }
     public void SetHand(int hand, int index)
     {
         if (plugin == null) return;
 
-        plugin.SetMainHand(hand,  index);
+        plugin.SetMainHand(hand, index);
         Hand = (HandType)hand;
     }
     public void sendHIDTO(bool AppState, bool HIDState, int index)
@@ -76,7 +76,7 @@ public class MudraUnityManager : MonoBehaviour
         plugin.SendFirmwareCommand(command);
     }
 
-    
+
     public void ResetGesture()
     {
         PluginPlatform.devices[0].deviceData.lastGesture = GestureType.None;
@@ -152,8 +152,8 @@ Debug.Log("Create New Unity Plugin");
 #endif
         }
         Debug.Log("Init");
-
-        plugin.Init();
+        if (plugin != null)
+            plugin.Init();
 
     }
     public void OnDeviceConnected(int i)
@@ -164,8 +164,8 @@ Debug.Log("Create New Unity Plugin");
         PluginPlatform.devices[i].IsImuQuaternionEnabled = Quaternion;
 
         sendHIDTO(false, false, i);
-        SetAirMouseSpeed(AirMouseSpeed,i);
-        SetHand((int)Hand,i);
+        SetAirMouseSpeed(AirMouseSpeed, i);
+        SetHand((int)Hand, i);
 
         OnConnectedEvent.Invoke(i);
     }
@@ -180,10 +180,12 @@ Debug.Log("Create New Unity Plugin");
         MudraUnityiOSPlugin.ConnectToDevicesExtern();
 #endif
     }
- 
+
     private void OnApplicationQuit()
     {
-        SetPressureState(false,0);
+        if (!PluginPlatform.HasDevices)
+            return;
+        SetPressureState(false, 0);
         SetGestureState(false, 0);
     }
 
