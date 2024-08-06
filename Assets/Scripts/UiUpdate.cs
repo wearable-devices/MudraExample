@@ -42,12 +42,13 @@ public class UiUpdate : MonoBehaviour
     }
     public void SetSendHID(bool state)
     {
-        unityManager.sendHIDTO(state, appState,0);
+        unityManager.SetFirmwareTarget(FirmwareTarget.NAVIGATION_TO_HID, state, 0);
         hidState = state;
     }
     public void SetSendAPP(bool state)
     {
-        unityManager.sendHIDTO(hidState, state, 0);
+
+        unityManager.SetFirmwareTarget(FirmwareTarget.NAVIGATION_TO_APP, state, 0);
         appState = state;
     }
 }

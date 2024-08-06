@@ -48,7 +48,7 @@ public class Dragger : MonoBehaviour
         {
             Hold();
         }
-        if (!holding && inputManager.pressure < 0.5f)
+        if (holding && inputManager.pressure < 0.5f)
         {
             Release();
         }
